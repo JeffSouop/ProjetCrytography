@@ -12,7 +12,7 @@ class CertificateExtractor:
 
         with open(self.output_file, 'w') as cert_file:
             for domain in domain_names:
-                command = f"openssl s_client -connect {domain}:443 -showcerts"
+                command = f"openssl s_client -connect {domain}:443 -showcerts 2>/dev/null | openssl x509"
                 result = subprocess.run(["bash", "-c", command], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         text=True)
                 certificates = self._extract_certificates(result.stdout)

@@ -1,47 +1,43 @@
-from Crypto.PublicKey import RSA
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from math import gcd
 
-def read_public_keys_from_file(file_path):
-    try:
-        with open(file_path, 'r') as file:
-            keys = file.read().split('\n\n')  # Supposant que les clés sont séparées par des sauts de ligne
-        return keys
-    except FileNotFoundError:
-        print(f"Le fichier {file_path} est introuvable.")
-        return []
+def calculate_gcd(key1, key2):
+    # Charger les clés publiques
+    public_key1 = serialization.load_pem_public_key(key1.encode())
+    public_key2 = serialization.load_pem_public_key(key2.encode())
 
-def compare_keys(keys):
-    compromised_pairs = []
+    # Récupérer les nombres de modules des clés publiques
+    modulus1 = public_key1.public_numbers().n
+    modulus2 = public_key2.public_numbers().n
 
-    for i in range(len(keys)):
-        for j in range(i + 1, len(keys)):
-            try:
-                key_i = RSA.import_key(keys[i])
-                key_j = RSA.import_key(keys[j])
+    # Calculer le PGCD des modules
+    return gcd(modulus1, modulus2)
 
-                # Comparaison des modules (n) des clés RSA
-                if key_i.n == key_j.n:
-                    compromised_pairs.append((keys[i], keys[j]))
+# Deux clés publiques (format PEM)
+key1 = """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzBhTgGw2olB2x8ebKNYA
+mjq7aIK984r9vfUu5jXrVBNVO0xG+Tc94H71iHRaftd+RzkKrsLH7tQrIuO9B7MT
+an8w9eVNTWrs8qBQEERMOhnMy8Jz8gQA6/ebIv5Zvqq8MPaNzPviLiv48gT3jBoP
+5RNHoswyzyYAbTO1IE5oKyfbKSHrjyfO4OEfudof3GMzQa3mN4aWEzsp3IhC2gvA
+JyQ/FgMOy7n6zm4DGHpOUY4/KT7hOIYcnxqyTPTxjYkHx95kwmKS0901wCYEVIlM
+uYGvzieDzY8rBKxSbpOsndGpQK44R24iKgrCSCjOBpcNOFdLCg3078yQRNbWKw8X
+eQIDAQAZ
+-----END PUBLIC KEY-----
+"""
 
-                # Ici, vous pouvez ajouter d'autres critères de comparaison
-                # Par exemple, vérification des paramètres communs, etc.
+key2 = """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzBhTgGw2olB2x8ebKNYA
+mjq7aIK984r9vfUu5jXrVBNVO0xG+Tc94H71iHRaftd+RzkKrsLH7tQrIuO9B7MT
+an8w9eVNTWrs8qBQEERMOhnMy8Jz8gQA6/ebIv5Zvqq8MPaNzPviLiv48gT3jBoP
+5RNHoswyzyYAbTO1IE5oKyfbKSHrjyfO4OEfudof3GMzQa3mN4aWEzsp3IhC2gvA
+JyQ/FgMOy7n6zm4DGHpOUY4/KT7hOIYcnxqyTPTxjYkHx95kwmKS0901wCYEVIlM
+uYGvzieDzY8rBKxSbpOsndGpQK44R24iKgrCSCjOBpcNOFdLCg3078yQRNbWKw8X
+uQIDAQAB
+-----END PUBLIC KEY-----
+"""
 
-            except ValueError:
-                # Si une clé n'est pas valide, passe à la suivante
-                continue
-
-    return compromised_pairs
-
-file_path = 'keys.txt'  # Remplacez par le chemin de votre fichier
-keys = read_public_keys_from_file(file_path)
-
-if keys:
-    compromised_pairs = compare_keys(keys)
-
-    if compromised_pairs:
-        print("Paires de clés compromises :")
-        for pair in compromised_pairs:
-            print(pair)
-    else:
-        print("Aucune paire de clés compromises trouvée.")
-else:
-    print("Aucune clé publique trouvée dans le fichier.")
+result = calculate_gcd(key1, key2)
+print("Le PGCD des modules des clés publiques est :", result)
